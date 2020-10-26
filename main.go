@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -17,9 +17,10 @@ type Field struct {
 }
 
 type Block struct {
-	Type   string   `json:"type"`
-	Fields []*Field `json:"fields,omitempty"`
-	Text   *Field   `json:"text,omitempty"`
+	Type     string   `json:"type"`
+	Fields   []*Field `json:"fields,omitempty"`
+	Elements []*Field `json:"elements,omitempty"`
+	Text     *Field   `json:"text,omitempty"`
 }
 
 type Attachment struct {
@@ -72,14 +73,12 @@ func main() {
 		msgUsername = username
 	} else if environment != "" {
 		msgUsername = environment
-	} else {
-		msgUsername = "slack-hook"
 	}
 
 	context := []*Field{
 		{
 			Type: "mrkdwn",
-			Text: fmt.Sprintf("*Environment: *\n%s", environment),
+			Text: fmt.Sprintf("*Environment:* %s", environment),
 		},
 	}
 
@@ -90,7 +89,7 @@ func main() {
 
 		context = append(context, &Field{
 			Type: "mrkdwn",
-			Text: fmt.Sprintf("*Previous: *\n%s", installedVersion),
+			Text: fmt.Sprintf("*Previous:* %s", installedVersion),
 		})
 	}
 
@@ -110,8 +109,8 @@ func main() {
 						},
 					},
 					{
-						Type:   "context",
-						Fields: context,
+						Type:     "context",
+						Elements: context,
 					},
 				},
 			},
@@ -120,20 +119,29 @@ func main() {
 
 	body, e := json.Marshal(payload)
 	if e != nil {
-		log.Panicln(e)
+		fmt.Println(e)
+		os.Exit(1)
 	}
 
 	request, re := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if re != nil {
-		log.Panicln(re)
+		fmt.Println(re)
+		os.Exit(1)
 	}
 
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
 
-	_, ce := client.Do(request)
+	resp, ce := client.Do(request)
 	if ce != nil {
-		log.Panicln(ce)
+		fmt.Println(ce)
+		os.Exit(1)
 	}
+	slackMsg, re := ioutil.ReadAll(resp.Body)
+	if re != nil {
+		fmt.Println(re)
+		os.Exit(1)
+	}
+	fmt.Println(string(slackMsg))
 }
