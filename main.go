@@ -48,6 +48,7 @@ func main() {
 
 	var msgAction string
 	var color []byte
+	var msgUsername string
 
 	switch operation {
 	case "install":
@@ -64,10 +65,20 @@ func main() {
 		color = []byte{255, 161, 0}
 	}
 
+	if username != "" && environment != "" {
+		msgUsername = fmt.Sprintf("%s (%s)", username, environment)
+	} else if username != "" {
+		msgUsername = username
+	} else if environment != "" {
+		msgUsername = environment
+	} else {
+		msgUsername = "slack-hook"
+	}
+
 	payload := Payload{
 		Channel:   channel,
 		IconEmoji: iconEmoji,
-		Username:  username,
+		Username:  msgUsername,
 		Attachments: []*Attachment{
 			{
 				Color: fmt.Sprintf("#%x", color),
@@ -76,20 +87,7 @@ func main() {
 						Type: "section",
 						Text: &Field{
 							Type: "mrkdwn",
-							Text: fmt.Sprintf("%s is being %s", application, msgAction),
-						},
-					},
-					{
-						Type: "section",
-						Fields: []*Field{
-							{
-								Type: "mrkdwn",
-								Text: fmt.Sprintf("*Environment*\n%s", environment),
-							},
-							{
-								Type: "mrkdwn",
-								Text: fmt.Sprintf("*Application*\n%s", application),
-							},
+							Text: fmt.Sprintf("*%s* is being %s", application, msgAction),
 						},
 					},
 					{
