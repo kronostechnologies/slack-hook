@@ -40,6 +40,7 @@ func main() {
 	channel := os.Getenv("SLACK_CHANNEL")
 	iconEmoji := os.Getenv("SLACK_ICON_EMOJI")
 	username := os.Getenv("SLACK_USERNAME")
+	color := os.Getenv("SLACK_COLOR")
 	operation := os.Getenv("RELEASE_OPERATION")
 	version := os.Getenv("RELEASE_VERSION")
 	installedVersion := os.Getenv("RELEASE_INSTALLED_VERSION")
@@ -47,22 +48,22 @@ func main() {
 	environment := os.Getenv("RELEASE_ENVIRONMENT")
 
 	var msgAction string
-	var color []byte
+	var msgVersion string
 	var msgUsername string
 
 	switch operation {
 	case "install":
-		msgAction = "installed"
-		color = []byte{46, 182, 125}
+		msgAction = "Installing"
+		msgVersion = version
 	case "upgrade":
-		msgAction = "upgraded"
-		color = []byte{54, 197, 240}
+		msgAction = "Installing"
+		msgVersion = version
 	case "delete":
-		msgAction = "deleted"
-		color = []byte{224, 30, 90}
+		msgAction = "Deleting"
+		msgVersion = installedVersion
 	case "rollback":
-		msgAction = "rolled back"
-		color = []byte{255, 161, 0}
+		msgAction = "Rolling back to"
+		msgVersion = version
 	}
 
 	if username != "" && environment != "" {
@@ -75,32 +76,38 @@ func main() {
 		msgUsername = "slack-hook"
 	}
 
+	context := []*Field{
+		{
+			Type: "mrkdwn",
+			Text: fmt.Sprintf("*Environment: *\n%s", environment),
+		},
+	}
+
+	if operation != "delete" && installedVersion != "" {
+		context = append(context, &Field{
+			Type: "mrkdwn",
+			Text: fmt.Sprintf("*Previous: *\n%s", installedVersion),
+		})
+	}
+
 	payload := Payload{
 		Channel:   channel,
 		IconEmoji: iconEmoji,
 		Username:  msgUsername,
 		Attachments: []*Attachment{
 			{
-				Color: fmt.Sprintf("#%x", color),
+				Color: color,
 				Blocks: []*Block{
 					{
 						Type: "section",
 						Text: &Field{
 							Type: "mrkdwn",
-							Text: fmt.Sprintf("*%s* is being %s", application, msgAction),
+							Text: fmt.Sprintf("%s *%s* %s", msgAction, application, msgVersion),
 						},
 					},
 					{
-						Type: "section",
-						Fields: []*Field{
-							{
-								Type: "mrkdwn",
-								Text: fmt.Sprintf("*Previous version*\n%s", installedVersion),
-							}, {
-								Type: "mrkdwn",
-								Text: fmt.Sprintf("*Version*\n%s", version),
-							},
-						},
+						Type:   "context",
+						Fields: context,
 					},
 				},
 			},
