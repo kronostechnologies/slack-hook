@@ -84,6 +84,10 @@ func main() {
 	}
 
 	if operation != "delete" && installedVersion != "" {
+		if version == installedVersion {
+			os.Exit(0)
+		}
+
 		context = append(context, &Field{
 			Type: "mrkdwn",
 			Text: fmt.Sprintf("*Previous: *\n%s", installedVersion),
