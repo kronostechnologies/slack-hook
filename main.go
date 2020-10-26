@@ -42,6 +42,7 @@ func main() {
 	username := os.Getenv("SLACK_USERNAME")
 	operation := os.Getenv("RELEASE_OPERATION")
 	version := os.Getenv("RELEASE_VERSION")
+	installedVersion := os.Getenv("RELEASE_INSTALLED_VERSION")
 	application := os.Getenv("RELEASE_APPLICATION")
 	environment := os.Getenv("RELEASE_ENVIRONMENT")
 
@@ -75,7 +76,7 @@ func main() {
 						Type: "section",
 						Text: &Field{
 							Type: "mrkdwn",
-							Text: fmt.Sprintf("A release is being %s", msgAction),
+							Text: fmt.Sprintf("%s is being %s", application, msgAction),
 						},
 					},
 					{
@@ -87,7 +88,7 @@ func main() {
 							},
 							{
 								Type: "mrkdwn",
-								Text: fmt.Sprintf("*Operation*\n%s", operation),
+								Text: fmt.Sprintf("*Application*\n%s", application),
 							},
 						},
 					},
@@ -96,7 +97,7 @@ func main() {
 						Fields: []*Field{
 							{
 								Type: "mrkdwn",
-								Text: fmt.Sprintf("*Application*\n%s", application),
+								Text: fmt.Sprintf("*Previous version*\n%s", installedVersion),
 							}, {
 								Type: "mrkdwn",
 								Text: fmt.Sprintf("*Version*\n%s", version),
