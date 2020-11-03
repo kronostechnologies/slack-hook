@@ -84,7 +84,7 @@ func main() {
 
 	if operation != "delete" && installedVersion != "" {
 		if version == installedVersion {
-			os.Exit(0)
+			return
 		}
 
 		context = append(context, &Field{
@@ -120,13 +120,13 @@ func main() {
 	body, e := json.Marshal(payload)
 	if e != nil {
 		fmt.Println(e)
-		os.Exit(1)
+		return
 	}
 
 	request, re := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if re != nil {
 		fmt.Println(re)
-		os.Exit(1)
+		return
 	}
 
 	client := &http.Client{
@@ -136,12 +136,12 @@ func main() {
 	resp, ce := client.Do(request)
 	if ce != nil {
 		fmt.Println(ce)
-		os.Exit(1)
+		return
 	}
 	slackMsg, re := ioutil.ReadAll(resp.Body)
 	if re != nil {
 		fmt.Println(re)
-		os.Exit(1)
+		return
 	}
 	fmt.Println(string(slackMsg))
 }
